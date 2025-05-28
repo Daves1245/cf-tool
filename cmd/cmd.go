@@ -8,51 +8,62 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/docopt/docopt-go"
-
 	"github.com/fatih/color"
 	"github.com/xalanq/cf-tool/client"
 	"github.com/xalanq/cf-tool/config"
 	"github.com/xalanq/cf-tool/util"
 )
 
-// Eval opts
-func Eval(opts docopt.Opts) error {
-	Args = &ParsedArgs{}
-	opts.Bind(Args)
-	if err := parseArgs(opts); err != nil {
-		return err
-	}
-	if Args.Config {
+// Eval evaluates command
+func Eval(args map[string]interface{}) error {
+	if args["config"].(bool) {
 		return Config()
-	} else if Args.Submit {
+	}
+	if args["submit"].(bool) {
 		return Submit()
-	} else if Args.List {
+	}
+	if args["list"].(bool) {
 		return List()
-	} else if Args.Parse {
+	} else if args["parse"].(bool) {
 		return Parse()
-	} else if Args.Gen {
+	} else if args["gen"].(bool) {
 		return Gen()
-	} else if Args.Test {
-		return Test()
-	} else if Args.Watch {
+	} else if args["test"].(bool) {
+		return TestConnection()
+	} else if args["watch"].(bool) {
 		return Watch()
-	} else if Args.Open {
+	} else if args["open"].(bool) {
 		return Open()
-	} else if Args.Stand {
+	} else if args["stand"].(bool) {
 		return Stand()
-	} else if Args.Sid {
+	} else if args["sid"].(bool) {
 		return Sid()
-	} else if Args.Race {
+	} else if args["race"].(bool) {
 		return Race()
-	} else if Args.Pull {
+	} else if args["pull"].(bool) {
 		return Pull()
-	} else if Args.Clone {
+	} else if args["clone"].(bool) {
 		return Clone()
-	} else if Args.Upgrade {
+	} else if args["upgrade"].(bool) {
 		return Upgrade()
 	}
 	return nil
+}
+
+// TestConnection tests if we can connect to Codeforces
+func TestConnection() error {
+	cln := client.Instance
+	if cln == nil {
+		return fmt.Errorf("Client is not initialized. Please run 'cf config' first")
+	}
+	
+	// Check if we have login credentials
+	if cln.HandleOrEmail == "" || cln.Password == "" {
+		color.Yellow("No login credentials found. Please run 'cf config' first to set up your credentials.")
+		return cln.ConfigLogin()
+	}
+	
+	return cln.TestConnection()
 }
 
 func getSampleID() (samples []string) {

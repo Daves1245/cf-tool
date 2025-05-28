@@ -43,6 +43,13 @@ func findHandle(body []byte) (string, error) {
 }
 
 func findCsrf(body []byte) (string, error) {
+	// Print first 1000 bytes of response to see what we're getting
+	if len(body) > 1000 {
+		color.Yellow("First 1000 bytes of response: %s", string(body[:1000]))
+	} else {
+		color.Yellow("Full response: %s", string(body))
+	}
+
 	reg := regexp.MustCompile(`csrf='(.+?)'`)
 	tmp := reg.FindSubmatch(body)
 	if len(tmp) < 2 {
